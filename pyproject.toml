@@ -1,0 +1,52 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "agent-service"
+version = "0.1.0"
+description = "The parts of an OpenAI Agents SDK deployment that have to be right whether or not the agent is."
+readme = "README.md"
+requires-python = ">=3.10"
+license = { text = "MIT" }
+authors = [{ name = "Seth Daluga" }]
+keywords = ["openai", "agents", "llm", "guardrails", "observability", "governance"]
+
+# The toolkit itself has NO runtime dependencies. That is a deliberate
+# constraint, not an accident of scope: it means the posture audit, the
+# guardrail logic, the session store and the trace processor can run in a
+# pre-commit hook, a CI job, or a service that has not installed the SDK.
+# A governance control you can only run inside the thing it governs is a
+# control that gets skipped.
+dependencies = []
+
+[project.optional-dependencies]
+# The SDK is needed for `service.py`, for the contract tests that pin our
+# claims against the real package, and for the one example that calls a model.
+sdk = ["openai-agents>=0.22"]
+dev = ["pytest>=8", "pytest-asyncio>=0.23", "ruff>=0.5", "openai-agents>=0.22"]
+
+[project.urls]
+Homepage = "https://github.com/sdaluga/openai-agents-in-production"
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+asyncio_mode = "auto"
+# Quiet by default. A test suite that prints is a test suite whose failures
+# scroll past.
+addopts = "-q"
+
+[tool.ruff]
+line-length = 100
+target-version = "py310"
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "B", "UP"]
+ignore = [
+    # The guardrail adapters import the SDK inside function bodies on
+    # purpose, so the package stays importable without it.
+    "E402",
+]
